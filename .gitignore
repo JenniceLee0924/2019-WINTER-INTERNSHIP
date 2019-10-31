@@ -1,0 +1,7 @@
+*.out
+*.xlsx
+*.csv
+*.o
+main
+test
+.DS_Store

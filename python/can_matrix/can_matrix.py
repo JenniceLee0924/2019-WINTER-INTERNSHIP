@@ -1,6 +1,8 @@
 #convert xlsx to csv
 import csv
+from collections import defaultdict
 import xlrd
+
 def excel_to_csv():
     wb = xlrd.open_workbook('can_matrix_icm.xlsx')
     sh = wb.sheet_by_name('Matrix')
@@ -14,14 +16,6 @@ def excel_to_csv():
 
 excel_to_csv()
 
-#read csv file
-with open('can_matrix_csv.csv') as csvFile:
-    csvReader = csv.reader(csvFile)
-    for row in csvReader:
-        print(row)
-
-import csv
-from collections import defaultdict
 #creating empty dictionary
 columns = defaultdict(list)
 #Going through each items of the rows

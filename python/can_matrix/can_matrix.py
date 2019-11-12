@@ -19,7 +19,7 @@ excel_to_csv()
 #creating empty dictionary
 columns = defaultdict(list)
 #Going through each items of the rows
-with open('can_matrix.csv', mode='r') as infile:
+with open('can_matrix_csv.csv', mode='r') as infile:
     reader = csv.DictReader(infile)
     for row in reader:
         for (k,v) in row.items():
@@ -28,15 +28,17 @@ with open('can_matrix.csv', mode='r') as infile:
 Signal_Name = columns['Signal Name']
 Start_Bit = columns['Start Bit\n(LSB)']
 Signal_Size = columns['Signal Size']
+Msg_ID = columns['Msg ID']
+
+
 #Creating dictionary with Signal_Name as key
 dic1 = dict(zip(Signal_Name,Start_Bit))
 dic2 = dict(zip(Signal_Name,Signal_Size))
-dic3 = dict(zip(Signal_Name,'0x107'))
+dic3 = dict(zip(Signal_Name,Msg_ID))
 
 dic4 = defaultdict(list)
 #combining values of the same key
 for d in (dic1,dic2,dic3):
     for key,value in d.items():
         dic4[key].append(value)
-
 print(dic4)

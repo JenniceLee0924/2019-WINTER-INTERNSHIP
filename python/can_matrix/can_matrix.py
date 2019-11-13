@@ -3,6 +3,8 @@ import csv
 from collections import defaultdict
 import xlrd
 from collections import deque
+from textwrap import wrap
+
 
 def excel_to_csv():
     wb = xlrd.open_workbook('can_matrix_icm.xlsx')
@@ -46,8 +48,6 @@ def convert_to_dic(file):
             dic4[key].append(value)
     return dic4
 
-#!/usr/bin/env python
-
 #convert int into hex
 def int_hex(n):
     hex = '{n:x}'.format(n=n)
@@ -62,14 +62,19 @@ def makeCanData(Signal):
     bit = values[0]
     size = values[1]
     id = values[2]
-    hex = int_hex(2**int(bit))
-    hex = hex + '0x0'
-    deq = deque([0] * 18)
-    for i in hex:
-        deq.appendleft(i)
-    return deq
+    little_end = int_hex(2**int(bit))
+    little_end = wrap(little_end,2)
+    big_end = list(reversed(little_end))
+    big_end = ''.join(big_end)
+    hex_list = [0]*16
+    for i in range(len(big_end)):
+        if big_end:
+            hex_list[i] = big_end[i]
+    can_data = ''.join(str(i) for i in hex_list)
+    can_data = '0x' + can_data
+    return can_data
 
+print(makeCanData('LFDoorStatus'))
+print(type(makeCanData('LFDoorStatus')))
+print(int_hex(268435456))
 
-
-print(makeCanData('PositionLampStatus '))
-print(int_hex(128))

@@ -1,4 +1,5 @@
-#convert xlsx to csv
+import re
+import sys
 import csv
 from collections import defaultdict
 import xlrd
@@ -6,30 +7,34 @@ from collections import deque
 from textwrap import wrap
 
 
-def excel_to_csv():
-    wb = xlrd.open_workbook('can_matrix_icm.xlsx')
+CAN_MATRIX_EXCEL_FILE_NAME  = "can_matrix_icm.xlsx"
+CAN_MATRIX_CSV_FILE_NAME  = "can_matrix_csv.csv"
+
+
+#converting csv file
+def ConvertExcelToCSV():
+    wb = xlrd.open_workbook(CAN_MATRIX_EXCEL_FILE_NAME)
     sh = wb.sheet_by_name('Matrix')
-    can_matrix_csv = open('can_matrix_csv.csv','w')
+    can_matrix_csv = open(CAN_MATRIX_CSV_FILE_NAME, mode='w', encoding='utf8')
     wr = csv.writer(can_matrix_csv,quoting=csv.QUOTE_ALL)
 
     for row in range(sh.nrows):
         wr.writerow(sh.row_values(row))
 
     can_matrix_csv.close()
-#creating csv file
-excel_to_csv()
+    return True
 
-#global variables
-file = 'can_matrix_csv.csv'
-def ConvertToDic(file):
+# parsing can signal
+def ParseCanSignal():
     #creating empty dictionary
     columns = defaultdict(list)
     #Going through each items of the rows
-    with open(file, mode='r') as infile:
+    with open(CAN_MATRIX_CSV_FILE_NAME, mode='r', encoding='utf8') as infile:
         reader = csv.DictReader(infile)
         for row in reader:
             for (k,v) in row.items():
                 columns[k].append(v)
+
     #Creating columns
     signal_name = columns['Signal Name']
     start_bit = columns['Start Bit\n(LSB)']
@@ -43,6 +48,7 @@ def ConvertToDic(file):
     msgid_dic = dict(zip(signal_name,msg_id))
     temp_value_dic= dict(zip(signal_name,value_des))
     sort_temp_value_dic = sorted(temp_value_dic.items())
+
     #Creating list to append splited value description
     words = []
     #Split value descption by : and space
@@ -50,6 +56,7 @@ def ConvertToDic(file):
         for j in range(1):
             words.append(re.split('[:,"\n"]', sort_temp_value_dic[i][1]))
     valuedes_dic = dict(zip(signal_name,words))
+
     # combining values of the same key into dictionary
     dictionary = defaultdict(list)
     for d in (startbit_dic,signalsize_dic,msgid_dic,valuedes_dic):
@@ -58,6 +65,7 @@ def ConvertToDic(file):
 
     return dictionary
 
+
 #convert int into hex
 def IntHex(n):
     hex = '{n:x}'.format(n=n)
@@ -65,11 +73,10 @@ def IntHex(n):
         hex = '0' + hex
     return hex
 
-#convert csv to a new table in dictionary type
-dic = ConvertToDic(file)
+
 # convert signal info into can data
-def MakeCanData(Signal):
-    values = dic[Signal]
+def MakeCanData(can_dictionary, signal_name):
+    values = can_dictionary[signal_name]
     bit = values[0]
     size = values[1]
     id = values[2]
@@ -85,8 +92,30 @@ def MakeCanData(Signal):
     can_data = '0x' + can_data
     return can_data
 
-#1.for(name: Signal)
-    #for(value: 2 ** signal size)
-        #MakeCanData(name,value)
-#2. signal, value, can id, can data
-#3. if (value != datamodel(signal,can id,can data) ERROR
+
+def main():
+    if ( not ConvertExcelToCSV() ):
+        print( "ConvertExcelToCSV() error\n" )
+        return False
+
+    can_dictionary = ParseCanSignal()
+    if not can_dictionary:
+        print( "ParseCanSignal() error\n" )
+        return False
+
+    print(MakeCanData( can_dictionary, 'LFDoorStatus' ))
+    #1.for(name: Signal)
+        #for(value: 2 ** signal size)
+            #MakeCanData(name,value)
+
+    #2. signal, value, can id, can data
+
+    #3. if (value != datamodel(signal,can id,can data) ERROR
+
+    return True
+
+if __name__ == "__main__":
+	if ( main() ):
+		sys.exit( 0 )
+	else:
+		sys.exit( -1 )

@@ -68,28 +68,26 @@ def ParseCanSignal():
 
 #convert int into hex
 def IntHex(n):
-    hex = '{n:x}'.format(n=n)
-    if len(hex) & 1:
-        hex = '0' + hex
+    integer = n
+    hex = integer.to_bytes((((integer.bit_length() + 7) // 8)), "little").hex()
     return hex
 
 
 # convert signal info into can data
-def MakeCanData(can_dictionary, signal_name):
-    values = can_dictionary[signal_name]
-    bit = values[0]
-    size = values[1]
-    id = values[2]
-    little_end = IntHex(2**int(bit))
-    little_end = wrap(little_end,2)
-    big_end = list(reversed(little_end))
-    big_end = ''.join(big_end)
+def MakeCanData(signal,value):
+    signal = dic[signal]
+    bit = signal[0]
+    size = signal[1]
+    id = signal[2]
+    values = signal[3]
+    big_end = IntHex((2**int(bit))*value)
     hex_list = [0]*16
     for i in range(len(big_end)):
         if big_end:
             hex_list[i] = big_end[i]
     can_data = ''.join(str(i) for i in hex_list)
     can_data = '0x' + can_data
+
     return can_data
 
 

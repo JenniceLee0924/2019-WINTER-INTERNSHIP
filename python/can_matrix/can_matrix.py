@@ -23,13 +23,18 @@ def ConvertExcelToCSV():
 
     can_matrix_csv.close()
     return True
-
+    #delete empty values in dictionary
+def DelNoneKey(dictionary):
+    for i in dictionary.copy():
+        if not dictionary[i]:
+            dictionary.pop(i)
+    return dictionary
 # parsing can signal
 def ParseCanSignal():
     #creating empty dictionary
     columns = defaultdict(list)
     #Going through each items of the rows
-    with open(CAN_MATRIX_CSV_FILE_NAME, mode='r', encoding='utf8') as infile:
+    with open(file, mode='r') as infile:
         reader = csv.DictReader(infile)
         for row in reader:
             for (k,v) in row.items():
@@ -43,23 +48,14 @@ def ParseCanSignal():
     value_des = columns['Value_Description']
 
     #Creating dictionary with Signal_Name as key
-    startbit_dic = dict(zip(signal_name,start_bit))
-    signalsize_dic = dict(zip(signal_name,signal_size))
-    msgid_dic = dict(zip(signal_name,msg_id))
-    temp_value_dic= dict(zip(signal_name,value_des))
-    sort_temp_value_dic = sorted(temp_value_dic.items())
-
-    #Creating list to append splited value description
-    words = []
-    #Split value descption by : and space
-    for i in range(len(sort_temp_value_dic)):
-        for j in range(1):
-            words.append(re.split('[:,"\n"]', sort_temp_value_dic[i][1]))
-    valuedes_dic = dict(zip(signal_name,words))
+    startbit_dic = DelNoneKey(dict(zip(signal_name,start_bit)))
+    signalsize_dic = DelNoneKey(dict(zip(signal_name,signal_size)))
+    msgid_dic = DelNoneKey(dict(zip(signal_name,msg_id)))
+    value_dic= DelNoneKey(dict(zip(signal_name,value_des)))
 
     # combining values of the same key into dictionary
     dictionary = defaultdict(list)
-    for d in (startbit_dic,signalsize_dic,msgid_dic,valuedes_dic):
+    for d in (startbit_dic,signalsize_dic,msgid_dic,value_dic):
         for key,value in d.items():
             dictionary[key].append(value)
 

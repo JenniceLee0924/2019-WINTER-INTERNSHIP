@@ -43,11 +43,12 @@ def ParseCanSignal():
     #Creating columns
     signal_name = columns['Signal Name']
     start_bit = columns['Start Bit\n(LSB)']
-    signal_size = columns['Signal Size']
-    msg_id = columns['Msg ID']
-    value_des = columns['Value_Description']
+    data_size = columns['Signal Size']
+    message_id = columns['Msg ID']
+    value = columns['Value_Description']
 
     #Creating dictionary with Signal_Name as key
+
     startbit_dic = DelNoneKey(dict(zip(signal_name,start_bit)))
     signalsize_dic = DelNoneKey(dict(zip(signal_name,signal_size)))
     msgid_dic = DelNoneKey(dict(zip(signal_name,msg_id)))
@@ -56,6 +57,25 @@ def ParseCanSignal():
     # combining values of the same key into dictionary
     dictionary = defaultdict(list)
     for d in (startbit_dic,signalsize_dic,msgid_dic,value_dic):
+
+    start_bit_dic = dict(zip(signal_name,start_bit))
+    data_size_dic = dict(zip(signal_name,data_size))
+    message_id_dic = dict(zip(signal_name,message_id))
+    value_dic_temp = dict(zip(signal_name,value))
+    value_dic_temp_sorted = sorted(value_dic_temp.items())
+
+    #Creating list to append splited value description
+    words = []
+    #Split value descption by : and space
+    for i in range(len(value_dic_temp_sorted)):
+        for j in range(1):
+            words.append(re.split('[:,"\n"]', value_dic_temp_sorted[i][1]))
+    value_dic = dict(zip(signal_name,words))
+
+    # combining values of the same key into dictionary
+    dictionary = defaultdict(list)
+    for d in (start_bit_dic, data_size_dic, message_id_dic, value_dic):
+
         for key,value in d.items():
             dictionary[key].append(value)
 
@@ -70,14 +90,14 @@ def IntHex(n):
 
 
 # convert signal info into can data
-def MakeCanData(signal,value):
-    signal = dic[signal]
-    bit = signal[0]
-    size = signal[1]
-    id = signal[2]
-    values = signal[3]
-    big_end = IntHex((2**int(bit))*value)
-    hex_list = [0]*16
+def MakeCanData(can_dictionary, signal_name, signal_value):
+    signal = can_dictionary[signal_name]
+    start_bit = signal[0]
+    data_size = signal[1]
+    message_id = signal[2]
+    #value = signal[3]
+    big_end = IntHex((2 ** int(start_bit)) * signal_value)
+    hex_list = [0] * 16
     for i in range(len(big_end)):
         if big_end:
             hex_list[i] = big_end[i]
@@ -97,7 +117,7 @@ def main():
         print( "ParseCanSignal() error\n" )
         return False
 
-    print(MakeCanData( can_dictionary, 'LFDoorStatus' ))
+    print(MakeCanData( can_dictionary, 'LFDoorStatus', 1 ))
     #1.for(name: Signal)
         #for(value: 2 ** signal size)
             #MakeCanData(name,value)

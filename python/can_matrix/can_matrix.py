@@ -36,7 +36,9 @@ def ParseCanSignal():
     #Going through each items of the rows
     with open(CAN_MATRIX_CSV_FILE_NAME, mode='r', encoding='utf8') as infile:
         reader = csv.DictReader(infile)
+        fieldnames = reader.fieldnames
         for row in reader:
+            row.update({fieldnames: value.strip() for (fieldnames, value) in row.items()})
             for (k,v) in row.items():
                 columns[k].append(v)
 

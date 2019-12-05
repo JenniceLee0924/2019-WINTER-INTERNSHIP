@@ -22,8 +22,9 @@ def ConvertExcelToCSV():
 
     can_matrix_csv.close()
     return True
+
 #delete empty values in dictionary
-def DelNoneKey(dictionary):
+def RemoveEmptyDictionary(dictionary):
     for i in dictionary.copy():
         if not dictionary[i]:
             dictionary.pop(i)
@@ -47,38 +48,37 @@ def ParseCanSignal():
     start_bit = columns['Start Bit\n(LSB)']
     data_size = columns['Signal Size']
     message_id = columns['Msg ID']
-    value = columns['Value_Description']
+    #value_description = columns['Value_Description']
 
-    #Creating dictionary with Signal_Name as key
-    start_bit_dic = DelNoneKey(dict(zip(signal_name,start_bit)))
-    data_size_dic = DelNoneKey(dict(zip(signal_name,data_size)))
-    message_id_dic = DelNoneKey(dict(zip(signal_name,message_id)))
-    value_dic= DelNoneKey(dict(zip(signal_name,value)))
+    #Creating dictionary with Signal_Name as
+    start_bit_dic = RemoveEmptyDictionary(dict(zip(signal_name, start_bit)))
+    data_size_dic = RemoveEmptyDictionary(dict(zip(signal_name, data_size)))
+    message_id_dic = RemoveEmptyDictionary(dict(zip(signal_name, message_id)))
+    #value_description_dic= RemoveEmptyDictionary(dict(zip(signal_name, value_description)))
 
     # combining values of the same key into dictionary
     dictionary = defaultdict(list)
-    for d in (start_bit_dic, data_size_dic, message_id_dic, value_dic):
+    #for d in (start_bit_dic, data_size_dic, message_id_dic, value_description_dic):
+    for d in (start_bit_dic, data_size_dic, message_id_dic):
         for key,value in d.items():
             dictionary[key].append(value)
 
     return dictionary
 
-
 #convert int into hex
-def IntHex(n):
+def Int2Hex(n):
     integer = n
     hex = integer.to_bytes((((integer.bit_length() + 7) // 8)), "little").hex()
     return hex
 
-
 # convert signal info into can data
-def MakeCanData(can_dictionary, signal_name, signal_value):
-    signal = can_dictionary[signal_name]
+def MakeCanData(signal, signal_value):
     start_bit = signal[0]
-    data_size = signal[1]
-    message_id = signal[2]
-    #value = signal[3]
-    big_end = IntHex((2 ** int(start_bit)) * signal_value)
+    #data_size = signal[1]
+    #message_id = signal[2]
+    #value_description = signal[3]
+
+    big_end = Int2Hex((2 ** int(start_bit)) * signal_value)
     hex_list = [0] * 16
     for i in range(len(big_end)):
         if big_end:
@@ -99,14 +99,12 @@ def main():
         print( "ParseCanSignal() error\n" )
         return False
 
-    print(MakeCanData( can_dictionary, 'LFDoorStatus', 1 ))
-    #1.for(name: Signal)
-        #for(value: 2 ** signal size)
-            #MakeCanData(name,value)
-
-    #2. signal, value, can id, can data
-
-    #3. if (value != datamodel(signal,can id,can data) ERROR
+    for singal_name in can_dictionary.keys():
+        if singal_name:
+            signal = can_dictionary[singal_name]
+            for i in range(0, 2 ** int(float(signal[1]))):
+                print( MakeCanData(signal, i) )
+                #TODO: add AddTestCase() and include MakeCanData()
 
     return True
 

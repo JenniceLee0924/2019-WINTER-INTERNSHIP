@@ -9,7 +9,7 @@ from textwrap import wrap
 
 CAN_MATRIX_EXCEL_FILE_NAME  = "can_matrix_icm.xlsx"
 CAN_MATRIX_CSV_FILE_NAME  = "can_matrix_csv.csv"
-
+CAN_GTEST_SOURCE_FILE = "test.cpp"
 #converting csv file
 def ConvertExcelToCSV():
     wb = xlrd.open_workbook(CAN_MATRIX_EXCEL_FILE_NAME)
@@ -87,8 +87,9 @@ def MakeCanData(signal, signal_value):
     can_data = '0x' + can_data
 
     return can_data
-
-
+def AddTestCase(i, signal_name,signal_id, can_data):
+    test_string = "EXPECT_EQ({0},CanDataModel({1}, {2}, {3})".format(i, "'"+ signal_name+ "'",signal_id ,can_data + ")")
+    return test_string
 def main():
     if ( not ConvertExcelToCSV() ):
         print( "ConvertExcelToCSV() error\n" )
@@ -99,12 +100,21 @@ def main():
         print( "ParseCanSignal() error\n" )
         return False
 
-    for singal_name in can_dictionary.keys():
-        if singal_name:
-            signal = can_dictionary[singal_name]
-            for i in range(0, 2 ** int(float(signal[1]))):
-                print( MakeCanData(signal, i) )
-                #TODO: add AddTestCase() and include MakeCanData()
+    input = open(CAN_GTEST_SOURCE_FILE, 'r')
+    output = open('text2.cpp','w')
+    for i,line in enumerate(input.readlines()):
+        output.write(line)
+        if i == 6:
+            for signal_name in can_dictionary.keys():
+                if signal_name:
+                    signal = can_dictionary[signal_name]
+                    for i in range(0, 2 ** int(float(signal[1]))):
+                        can_data = MakeCanData(signal, i)
+                        test_case = AddTestCase(i, signal_name, signal[2], can_data)
+                        output.write("\t"+ test_case + ';'+ '\n')
+
+    output.close()
+    input.close()
 
     return True
 
